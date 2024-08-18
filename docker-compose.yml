@@ -1,0 +1,305 @@
+services:
+
+  # Apache Flink Components:
+  sql-client:
+    container_name: sql-client
+    networks:
+      iceberg_net:
+    build:
+      context: sql-client
+      dockerfile: Dockerfile
+    depends_on:
+      - broker
+      - jobmanager
+    volumes:
+      - ./hadoop-3.3.4:/opt/hadoop/hadoop-3.3.4
+    environment:
+      #FLINK_JOBMANAGER_HOST: jobmanager
+      #KAFKA_BOOTSTRAP: broker
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - "\
+        HADOOP_CLASSPATH=\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/common/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/common/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/hdfs/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/hdfs/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/tools/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/yarn/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/yarn/lib/*\
+        "
+
+  jobmanager:
+    image: flink:${FLINK_TAG}
+    container_name: jobmanager
+    networks:
+      iceberg_net:
+    build:
+      context: jobmanager
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    volumes:
+      - ./input:/opt/flink/input
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - "\
+        HADOOP_CLASSPATH=\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/common/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/common/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/hdfs/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/hdfs/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/tools/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/yarn/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/yarn/lib/*\
+        "
+  taskmanager:
+    image: flink:${FLINK_TAG}
+    container_name: taskmanager
+    networks:
+      iceberg_net:
+    build:
+      context: jobmanager
+      dockerfile: Dockerfile
+    depends_on:
+      - jobmanager
+    command: taskmanager 
+    volumes:
+      - ./hadoop-3.3.4:/opt/hadoop/hadoop-3.3.4
+      - ./input:/opt/flink/input
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 20
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - "\
+        HADOOP_CLASSPATH=\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/common/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/common/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/hdfs/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/hdfs/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/tools/lib/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/yarn/*:\
+        /opt/hadoop/hadoop-3.3.4/share/hadoop/yarn/lib/*\
+        "
+  # Confluent Platform Components below:
+
+  broker:
+    container_name: broker
+    networks:
+      iceberg_net:
+    hostname: broker
+    image: confluentinc/cp-server:${CP_TAG}
+    ports:
+      - "9101:9101"
+      - "9092:9092"
+      - "8090:8090"
+    restart: always
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_DEFAULT_MIN_ISR: 1
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_REPORTERS_TELEMETRY_AUTO_ENABLE: 'false'
+      KAFKA_CONFLUENT_BALANCER_ENABLE: 'false'
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      #KAFKA_CONFLUENT_HTTP_SERVER_LISTENERS: "http://0.0.0.0:8090"
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "http://schemaregistry:8084"
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'ZWe3nnZwTrKSM0aM2doAxQ'
+
+      # Metrics Reporting
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:29092
+
+      # Override Replication Factors for internal topics
+      KAFKA_CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      KAFKA_CONFLUENT_METRICS_REPORTER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_METRICS_ENABLE: 'true'
+
+  schemaregistry:
+    container_name: schemaregistry
+    networks:
+      iceberg_net:
+    hostname: schemaregistry
+    image: confluentinc/cp-schema-registry:${CP_TAG}
+    depends_on:
+      - broker
+    ports:
+      - '8084:8084'
+    restart: always
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:29092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8084
+
+  connect:
+    container_name: connect
+    networks:
+      iceberg_net:
+    hostname: connect
+    image: confluentinc/cp-enterprise-replicator:${CP_TAG}
+    ports:
+      - '8083:8083'
+    depends_on:
+      - broker
+      - schemaregistry
+    restart: always
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: broker:29092
+      CONNECT_LISTENERS: http://connect:8083
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: "source"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:29092
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:29092
+      CONNECT_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8090
+      # Connect Custom Topics
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schemaregistry:8084
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schemaregistry:8084
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components,/data/connect-jars
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+    command:
+      - bash
+      - -c
+      - |
+        echo "Installing Connector"
+        confluent-hub install --no-prompt confluentinc/kafka-connect-datagen:0.6.3
+        #
+        echo "Launching Kafka Connect worker"
+        /etc/confluent/docker/run &
+        #
+        sleep infinity
+  akhq:
+    image: tchiotludo/akhq:latest
+    container_name: akhq
+    networks:
+      iceberg_net:
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          server:
+            access-log:
+              enabled: false
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "broker:29092"
+              schema-registry:
+                type: "confluent"
+                url: "http://schemaregistry:8084"
+    ports:
+      - 8085:8080
+    links:
+      - broker
+
+
+  rest:
+    image: tabulario/iceberg-rest
+    container_name: iceberg-rest
+    networks:
+      iceberg_net:
+    ports:
+      - 8181:8181
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+      - CATALOG_WAREHOUSE=s3://warehouse/
+      - CATALOG_IO__IMPL=org.apache.iceberg.aws.s3.S3FileIO
+      - CATALOG_S3_ENDPOINT=http://minio:9000
+  minio:
+    image: minio/minio
+    container_name: minio
+    networks:
+      iceberg_net:
+        aliases:
+          - warehouse.minio
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password
+      - MINIO_DOMAIN=minio
+    ports:
+      - 9001:9001
+      - 9000:9000
+    command: ["server", "/data", "--console-address", ":9001"]
+  mc:
+    depends_on:
+      - minio
+    image: minio/mc
+    container_name: mc
+    networks:
+      iceberg_net:
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc config host add minio http://minio:9000 admin password) do echo '...waiting...' && sleep 1; done;
+      /usr/bin/mc rm -r --force minio/warehouse;
+      /usr/bin/mc mb minio/warehouse;
+      /usr/bin/mc policy set public minio/warehouse;
+      tail -f /dev/null
+      "
+  trino:
+    image: trinodb/trino
+    container_name: trino
+    networks:
+      iceberg_net:
+    ports:
+      - 8080:8080
+    volumes:
+      - ./trino/flink_demo.properties:/etc/trino/catalog/flink_demo.properties
+    environment:
+      - TRINO_CONF_DIR=/etc/trino
+  superset:
+    container_name: superset
+    build:
+      context: superset 
+      dockerfile: Dockerfile
+    networks:
+      iceberg_net:      
+    environment:
+      - ADMIN_USERNAME=admin
+      - ADMIN_EMAIL=admin@superset.com
+      - ADMIN_PASSWORD=admin
+    ports:
+      - '8088:8088'
+networks:
+  iceberg_net: 
