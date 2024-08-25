@@ -47,7 +47,7 @@ curl --location --request PUT 'http://localhost:8083/connectors/datagen_local_01
             "max.interval": 500,
             "iterations": 10000,
             "tasks.max": "1"
-        }'
+}'
 
 
 -- Create page_views table in Flink from the Kafka events in page views topic
@@ -70,7 +70,7 @@ CREATE TABLE page_views (
 CREATE TABLE
 users (
 userid STRING,
-regionid STRING
+region STRING
 
     ) WITH (
     'connector' = 'filesystem',
@@ -144,10 +144,11 @@ insert into employee values(1, 'Steve', 'HR', TO_DATE('1990-01-01')), (2, 'Bob',
 insert into employee values(3, 'Smith', 'IT', TO_DATE('1990-01-01')), (4, 'Jack', 'HR', TO_DATE('1996-01-01'));
 
 
-use catalog default_catalog;
+
 
 --iceberg raw tables
 
+use catalog default_catalog;
 
 CREATE TABLE ice_catalog.ice_db.ice_page_views
     AS
@@ -173,12 +174,12 @@ CREATE TABLE ice_catalog.ice_db.ice_pages
 CREATE TABLE ice_catalog.ice_db.ice_user_page_views(
 userid string,
 pageid string,
-regionid string,
+region string,
 pagedescription string
 );
 
 --insert data by joining the 3 tables
-insert into ice_catalog.ice_db.ice_user_page_views select u.userid, pv.pageid, u.regionid, p.pagedescription from users u join page_views pv on(u.userid = pv.userid) join pages p on(pv.pageid = p.pageid);
+insert into ice_catalog.ice_db.ice_user_page_views select u.userid, pv.pageid, u.region, p.pagedescription from users u join page_views pv on(u.userid = pv.userid) join pages p on(pv.pageid = p.pageid);
 
 -- Query and check the results
 
@@ -209,7 +210,7 @@ SELECT * FROM ice_page_views$refs;
 --Time travel 
 -- https://www.epochconverter.com
 
-select * from ice_page_views /*+ OPTIONS('as-of-timestamp'='1723995039000') */;
+select * from ice_page_views /*+ OPTIONS('as-of-timestamp'='1724157454000') */;
 
 select * from ice_page_views /*+ OPTIONS('as-of-snapshot'='1723956820000') */;
 
@@ -226,11 +227,11 @@ trino://admin:@trino:8080/flink_demo
 CREATE TABLE ice_catalog.ice_db.ice_user_page_views_1(
 userid string,
 pageid string,
-regionid string,
+region string,
 pagedescription string
 );
 
 
-insert into ice_catalog.ice_db.ice_user_page_views_1 select u.userid, pv.pageid, u.regionid, p.pagedescription from ice_catalog.ice_db.ice_users /*+  OPTIONS('streaming'='true', 'monitor-interval'='10s')  */ u 
+insert into ice_catalog.ice_db.ice_user_page_views_1 select u.userid, pv.pageid, u.region, p.pagedescription from ice_catalog.ice_db.ice_users /*+  OPTIONS('streaming'='true', 'monitor-interval'='10s')  */ u 
 join ice_catalog.ice_db.ice_page_views /*+  OPTIONS('streaming'='true', 'monitor-interval'='15s')  */ pv on(u.userid = pv.userid) 
 join ice_catalog.ice_db.ice_pages /*+  OPTIONS('streaming'='true', 'monitor-interval'='15s')  */ p on(pv.pageid = p.pageid);
