@@ -23,7 +23,7 @@ Sample Page Click Event message
 
 The users.json file which maps userid to region will be ingested from file system which and can be referred here [users.json](/input/users/users.json)
 
-The pages.json file which maps pageid to pagedescription will be ingested from file system and can be referred here [users.json](/input/pages/pages.json)
+The pages.json file which maps pageid to pagedescription will be ingested from file system and can be referred here [pages.json](/input/pages/pages.json)
 
 ## Demo Pre-Requisites
 
