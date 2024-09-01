@@ -341,48 +341,48 @@ regions where our users are located and also the popular pages being visted from
 -> Provide a display name (say "Iceberg Demo") -> Provide connection url "trino://admin:@trino:8080/flink_demo" -> Click on "Test Connection" 
 -> Then click on "Connect". Refer to screenshots below
 
-![Superset Trino Connect DB](images/supserset-db-connection-1.png)
+![Superset Trino Connect DB](images/superset-db-connection-1.png)
 
-![Superset Trino Choose Presto](images/supserset-db-connection-2.png)
+![Superset Trino Choose Presto](images/superset-db-connection-2.png)
 
-![Superset Trino Provide URL](images/supserset-db-connection-3.png)
+![Superset Trino Provide URL](images/superset-db-connection-3.png)
 
 32) Now click on the Datasets menu on the top -> click "+DATASET" button -> Choose the database from the drop down ("Iceberg Demo") , 
 Schema as "ice_db", table as "ice_user_page_views", then click on "Create Dataset and Create Chart". Refer to screenshots below
 
-![Superset Dataset Menu](images/supserset-dataset-1.png)
+![Superset Dataset Menu](images/superset-dataset-1.png)
 
-![Superset Create Dataset](images/supserset-dataset-2.png)
+![Superset Create Dataset](images/superset-dataset-2.png)
 
 33) Now choose Pie Chart from the resulting screen and click on "create new chart" as shown below
 
-![Superset Pie Chart](images/supserset-chart-1.png)
+![Superset Pie Chart](images/superset-chart-1.png)
 
 34) In the resulting screen, provide the name of the chart as "Top User Regions", Drag and drop the "region" column from the Columns list
 in the left to the Dimensions area in the middle and count(*) from the metrics list on the left to the metric area in the middle , 
 then click on "CREATE CHART" button and then click on "SAVE" button as highlighted in the screenshots below
 
-![Superset Top User Regions Chart](images/supserset-chart-2.png)
+![Superset Top User Regions Chart](images/superset-chart-2.png)
 
-![Superset Top User Regions Chart](images/supserset-chart-3.png)
+![Superset Top User Regions Chart](images/superset-chart-3.png)
 
 35) Let's create another pie chart for "Popular Pages". Click on the "Charts" menu -> Click "+CHART" button ->  by choosing the "pagedescription"
 column as the dimension and count(*) as metric, row limit as "10" and click on "CREATE CHART" button and then click on "SAVE" button as highlighted
 in screenshots below
 
-![Superset Pie Chart](images/supserset-chart-1.png)
-![Superset Pie Chart](images/supserset-chart-4.png)
-![Superset Popular Pages Chart](images/supserset-chart-5.png)
-![Superset Popular Pages Chart](images/supserset-chart-6.png)
+![Superset Pie Chart](images/superset-chart-1.png)
+![Superset Pie Chart](images/superset-chart-4.png)
+![Superset Popular Pages Chart](images/superset-chart-5.png)
+![Superset Popular Pages Chart](images/superset-chart-6.png)
 
 36) Now let's create a dashboard with the 2 pie charts we have created. Click on the "Dashboard" menu -> Click "+DASHBOARD" button , then 
 give a name for the dashboard (say "Iceberg Demo Dashboard") -> then drag and drop the pie charts from the right side to the dashboard 
 canvas and click on "SAVE" button. Refer to the screenshots below
 
-![Superset Dashboard Menu](images/supserset-dashboard-1.png)
-![Superset Dashboard Setup](images/supserset-dashboard-2.png)
+![Superset Dashboard Menu](images/superset-dashboard-1.png)
+![Superset Dashboard Setup](images/superset-dashboard-2.png)
 
 37) You can refresh the browser or set an auto refresh interval in the "Edit Dashboard" option and follow the changes in the data
 
-![Superset Dashboard Setup](images/supserset-dashboard-3.png)
+![Superset Dashboard Setup](images/superset-dashboard-3.png)
 
