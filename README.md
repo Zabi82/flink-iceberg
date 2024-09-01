@@ -312,7 +312,7 @@ SELECT * FROM ice_page_views$refs;
 ```
 
 27) Let's perform time travel queries. Note down the different snapshot created time from the previous step which will be in UTC format.
-convert any of the snapshot created time to epoch time in milliseconds. [Epoch Converter](https://www.epochconverter.com) and substitute that time in the
+convert any of the snapshot created time to epoch time in milliseconds using [Epoch Converter](https://www.epochconverter.com) and substitute that time in the
 as-of-timestamp field in the below query. This would show only the data present as of that time in the iceberg table
 
 ```
