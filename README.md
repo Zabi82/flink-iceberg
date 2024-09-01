@@ -1,4 +1,4 @@
-# Demo code for my Kafka Flink meetup talk on "Streaming Lakehouse with Kafka, Flink and Iceberg"
+# Demo code for my talk on "Streaming Lakehouse with Kafka, Flink and Iceberg" in Singapore Apache Kafka Meetup
 
 This repository has the demo code for building a real time analytics dashboard by ingesting data to Kafka, process it using Apache Flink and storing it using Iceberg storage and querying it through Trino and visualising it through Apache Superset
 
