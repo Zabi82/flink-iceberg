@@ -6,7 +6,7 @@ This repository has the demo code for building a real time analytics dashboard b
 
 ![demo-outline.png](images/demo-outline.png)
 
-The demo setup is based on docker compose with Kafka, Flink, Kafka Connect with Datagen connector, Schema Registry, Trino, Rest catalog, Superset, Minio. We will ingest page click event messages to Kafka using the Datagen Connector. We will stream this data in Flink along with some user details and page details data JSON files from file system using Flink SQL and store in Iceberg. Further we will write some Flink SQL code to perform joins and store the results as well in Iceberg. We will then configure Trino to read these data and visualise them using Apache Superset.  The idea is to show how data flows from Kafka to Iceberg using Flink and how you can connect other query engines like Trino to read this data and visualise using Superset.
+The demo setup is based on docker compose with Kafka, Flink, Kafka Connect with Datagen connector, Schema Registry, Trino, Rest catalog, Superset, Minio. We will ingest sample page click event messages to Kafka using the Datagen Connector. We will stream this data in Flink along with some sample user details and page details data JSON files from file system using Flink SQL and store in Iceberg. Further we will write some Flink SQL code to perform joins and store the results as well in Iceberg. We will then configure Trino to read these data and visualise them using Apache Superset.  The idea is to show how data flows from Kafka to Iceberg using Flink and how you can connect other query engines like Trino to read this data and visualise using Superset.
 
 Sample Page Click Event message
 
@@ -21,7 +21,7 @@ Sample Page Click Event message
 
 ```
 
-The users.json file which maps userid to region will be ingested from file system which and can be referred here [users.json](/input/users/users.json)
+The users.json file which maps userid to region will be ingested from file system which can be referred here [users.json](/input/users/users.json)
 
 The pages.json file which maps pageid to pagedescription will be ingested from file system and can be referred here [pages.json](/input/pages/pages.json)
 
@@ -52,6 +52,9 @@ We also have a Dockerfile for the containers for Flink Job Manager, Task Manager
 2) Checkout this repo. 
 3) cd to the directory
 4) Download Hadoop 3.3.4 from https://hadoop.apache.org/release/3.3.4.html and keep the hadoop-3.3.4 directory inside this checked out directory (after un-tar)
+
+![Verify the directory structure](images/directory-structure.png)
+
 5) Build the required docker images 
  ```
     docker compose build --pull sql-client
@@ -65,7 +68,8 @@ We also have a Dockerfile for the containers for Flink Job Manager, Task Manager
 ![Containers Started](images/containers.png)
 
 7) Perform ``` docker ps ``` and make sure there are 12 containers up and running for the demo
-8) Create Datagen connector using below curl script from command line or equivalent one through postman to simulate page click events 
+8) Create Datagen connector using below curl script from command line or equivalent one through postman to simulate page click events.
+This will simulate random page click events every 500ms in "pageviews" topic up to 10K iterations
 
 ```
 curl --location --request PUT 'http://localhost:8083/connectors/datagen_local_01/config' \
@@ -203,7 +207,7 @@ CREATE DATABASE ice_db
 
 ```
 
-19) Let's again switch back to the Flink default catalog as we will have to create iceberg tables from from the tables we created earlier in the default catalog 
+19) Let's again switch back to the Flink default catalog as we will have to create iceberg tables from the tables we created earlier in the default catalog 
 
 ```
 
@@ -211,7 +215,7 @@ use catalog default_catalog;
 
 ```
 
-20) Create new iceberg table "ice_page_views" from the existing "page_views" table. The table name is prefixed with "ice_catalog.ice_db" as we want to create this table in the Flink iceberg catalog and db we had created earlier with all the properties related to iceberg. As you can see we are not again supplying all the iceberg related properties as it will be inherited from the Flink iceberg catalog
+20) Create new iceberg table "ice_page_views" from the existing "page_views" table. The table name is prefixed with "ice_catalog.ice_db" as we want to create this table in the Flink iceberg catalog and db we had created earlier (step 17 and 18) with all the properties related to iceberg. As you can see we are not again supplying all the iceberg related properties as it will be inherited from the Flink iceberg catalog
 
 ```
 
@@ -250,7 +254,7 @@ CREATE TABLE ice_catalog.ice_db.ice_pages
 
 ```
 
-24) Now let's create a new table to hold the results of joining 3 tables from Flink's default catalog. So this needs a create table statement followed by an insert statement which selects and joins data from the3 3 tables as follows.
+24) Now let's create a new table to hold the results of joining 3 tables from Flink's default catalog. So this needs a create table statement followed by an insert statement which selects and joins data from the 3 tables as follows.
 
 ```
 CREATE TABLE ice_catalog.ice_db.ice_user_page_views(
