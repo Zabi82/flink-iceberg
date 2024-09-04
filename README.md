@@ -52,6 +52,7 @@ We also have a Dockerfile for the containers for Flink Job Manager, Task Manager
 2) Checkout this repo. 
 3) cd to the directory
 4) Download Hadoop 3.3.4 from https://hadoop.apache.org/release/3.3.4.html and keep the hadoop-3.3.4 directory inside this checked out directory (after un-tar)
+Verify the directory structure with the image below
 
 ![Verify the directory structure](images/directory-structure.png)
 
