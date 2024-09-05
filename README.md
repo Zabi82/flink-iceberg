@@ -33,7 +33,7 @@ Docker compose setup will have the following containers
 
 - Kafka Broker (KRAFT based)
 - Confluent Schema Registry
-- Kafa Connect with Dotagen Connector plugins
+- Kafa Connect with Datagen Connector plugins
 - AKHQ (to visualise messages in Kafka topics)
 - Flink Job Manager
 - Flink Task Manager
